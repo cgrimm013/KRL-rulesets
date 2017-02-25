@@ -23,8 +23,11 @@ A first ruleset for the Quickstart
   
   rule hello_world {
     select when echo hello
-    send_directive("say") with
-      something = "Hello World"
+    pre{
+    name = event:attr("name").defaultsTo(ent:name,"use stored name")
+  }
+  send_directive("say") with
+    something = "Hello " + name
   }
 
   rule store_name {
