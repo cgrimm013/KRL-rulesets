@@ -19,6 +19,7 @@ A first ruleset for the Quickstart
               "events": [ { "domain": "echo", "type": "hello" },
 { "domain": "hello", "type": "name", "attrs": [ "name" ] } ]
             }
+    clear_name = { "_0": { "name": { "first": "GlaDOS", "last": "" } } }
   }
   
   rule hello_world {
@@ -39,6 +40,13 @@ A first ruleset for the Quickstart
     name = passed_name
   always{
     ent:name := passed_name
+  }
+}
+
+  rule clear_names {
+  select when hello clear
+  always {
+    ent:name := clear_name
   }
 }
   
