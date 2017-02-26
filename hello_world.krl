@@ -17,7 +17,8 @@ A first ruleset for the Quickstart
     __testing = { "queries": [ { "name": "hello", "args": [ "obj" ] },
                            { "name": "__testing" } ],
               "events": [ { "domain": "echo", "type": "hello" },
-{ "domain": "hello", "type": "name", "attrs": [ "name" ] } ]
+{ "domain": "hello", "type": "name", "attrs": [ "name" ] },
+{ "domain": "hello", "type" : "clear" }]
             }
     clear_name = { "_0": { "name": { "first": "GlaDOS", "last": "" } } }
   }
