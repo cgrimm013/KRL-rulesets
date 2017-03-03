@@ -18,9 +18,31 @@ ruleset app_section_collection{
     }
     
     __testing = { "events":  [ { "domain": "section", "type": "needed", "attrs": [ "section_id" ] },
-                               {"domain": "collection", "type": "empty"} ],
+                               { "domain": "collection", "type": "empty"}, 
+                               { "domain": "section", "type": "offline", "attrs": [ "section_id"] }
+                             ],    
                   "queries": [{"name": "showChildren"},
-                              {"name": "sections"}] }
+                              {"name": "sections"}
+                             ] 
+                }
+  }
+
+  rule section_offline {
+    select when section offline
+    pre {
+      section_id = event:attr("section_id")
+      exists = ent:sections >< section_id
+      eci = meta:eci
+      child_to_delete = childFromID(section_id)
+    }
+    if exists then
+      send_directive("section_deleted")
+        with section_id = section_id
+    fired {
+      raise pico event "delete_child_request"
+        attributes child_to_delete;
+      ent:sections{[section_id]} := null
+    }
   }
 
   rule collection_empty {
@@ -66,7 +88,13 @@ ruleset app_section_collection{
     }
     if section_id.klog("found section_id")
     then
-      noop()
+      event:send( { "eci": the_section.eci, 
+                    "eid": "install-ruleset",
+                    "domain": "pico", 
+                    "type": "new_ruleset",
+                    "attrs": { "rid": "app_section", 
+                               "section_id": section_id } 
+                  } )
     fired {
       ent:sections := ent:sections.defaultsTo({});
       ent:sections{[section_id]} := the_section
