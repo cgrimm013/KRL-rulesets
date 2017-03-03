@@ -35,6 +35,47 @@ ruleset app_section_collection{
       eci = meta:eci
       child_to_delete = childFromID(section_id)
     }
+ruleset app_section_collection{
+  meta{
+    use module io.picolabs.pico alias wrangler
+    shares __testing, showChildren, sections
+  }
+
+  global{
+    showChildren = function() {
+       wrangler:children()
+    }
+    
+    sections = function()  {
+      ent:sections
+    }
+
+    childFromID = function(section_id)  {
+      ent:sections{[section_id]}
+    }
+
+    nameFromID = function(section_id) {
+    "Section " + section_id + " Pico"
+    }
+    
+    __testing = { "events":  [ { "domain": "section", "type": "needed", "attrs": [ "section_id" ] },
+                               { "domain": "collection", "type": "empty"}, 
+                               { "domain": "section", "type": "offline", "attrs": [ "section_id"] }
+                             ],    
+                  "queries": [{"name": "showChildren"},
+                              {"name": "sections"}
+                             ] 
+                }
+  }
+
+  rule section_offline {
+    select when section offline
+    pre {
+      section_id = event:attr("section_id")
+      exists = ent:sections >< section_id
+      eci = meta:eci
+      child_to_delete = childFromID(section_id)
+    }
     if exists then
       send_directive("section_deleted")
         with section_id = section_id
