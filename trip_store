@@ -4,7 +4,7 @@ ruleset trip_store {
   }
   global {
     __testing = { "queries": [ { "name": "__testing" } ],
-                  "events": [ ] }
+                  "events": [ {"domain": "car", "type": "trip_reset"}] }
   }
 
   rule collect_trips {
@@ -14,6 +14,24 @@ ruleset trip_store {
     }
     fired{
       ent:trips:= ent:trips.defaultsTo([]).union([temp])
+    }
+  }
+
+  rule collect_long_trips {
+    select when explicit found_long_trip
+    pre{
+      temp = {"mileage": event:attr("mileage"), "time": time:now() }
+    }
+    fired{
+      ent:long_trips:= ent:long_trips.defaultsTo([]).union([temp])
+    }
+  }
+
+  rule clear_trips {
+    select when car trip_reset
+    always{
+      ent:trips:=[];
+      ent:long_trips:=[]
     }
   }
 }
