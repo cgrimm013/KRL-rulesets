@@ -1,0 +1,19 @@
+ruleset trip_store {
+  meta {
+    shares __testing
+  }
+  global {
+    __testing = { "queries": [ { "name": "__testing" } ],
+                  "events": [ ] }
+  }
+
+  rule collect_trips {
+    select when explicit trip_processed
+    pre{
+      temp = {"mileage": event:attr("mileage"), "time": time:now() }
+    }
+    fired{
+      ent:trips:= ent:trips.defaultsTo([]).union([temp])
+    }
+  }
+}
