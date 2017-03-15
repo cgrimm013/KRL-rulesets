@@ -16,7 +16,7 @@ ruleset new_trips {
       trip_length = m
     always{
       raise explicit event "trip_processed"
-        attributes event:attrs()
+        attributes event:attrs().put({"time":time:now()})
     }
   }
 
@@ -29,6 +29,7 @@ ruleset new_trips {
       noop()
     fired{
       raise explicit event "found_long_trip"
+        attributes event:attrs()
     }
   }
 }
