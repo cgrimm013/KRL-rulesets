@@ -1,6 +1,7 @@
 ruleset trip_store {
   meta {
-    shares __testing
+    shares __testing, get_trips, get_long_trips, get_short_trips 
+    provides get_trips, get_long_trips, get_short_trips
   }
   global {
     __testing = { "queries": [ { "name": "__testing" } ],
