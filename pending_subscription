@@ -1,0 +1,31 @@
+ruleset pending_subscription {
+  meta {
+    use module Subscriptions
+    shares __testing
+  }
+  global {
+    __testing = { "queries": [ { "name": "__testing" } ],
+                  "events": [ ] }
+  }
+
+  rule onPending {
+    select when wrangler inbound_pending_subscription_added
+    noop()
+    always{
+      raise wrangler event "pending_subscription_approval"
+        with subscription_name=event:attr("name_space")+":"+event:attr("subscription_name")
+    }
+  }
+
+  rule cancel {
+    select when explicit cancel
+    pre{
+      name = Subscriptions:getSubscriptions().keys()[0]
+    }
+    noop()
+    always{
+      raise wrangler event "subscription_cancellation"
+        with subscription_name=name
+    }
+  }
+}
