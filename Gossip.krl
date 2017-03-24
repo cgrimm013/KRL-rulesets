@@ -10,16 +10,23 @@ ruleset Gossip {
   rule new_message{
     select when new message
     pre{
-      //check for already existing message id
       //compile the data together
       partial_message = { "originator":event:attr("originator"),
                           "message": event:attr("message"),
                           "originatorID": event:attr("originatorID")
                         }
-      rumor_message = {"Rumor": partial_message, "Endpoint":}
+      rumor_message = {"Rumor": partial_message, "Endpoint":"Some URL"}
+      //check for already existing message id
     }
     fired{
-      ent:messages.defaultsTo([])
+      ent:messages.defaultsTo([]).union([rumor_message])
+    }
+  }
+
+  rule clear_messages{
+    select when clear messages
+    always{
+      ent:messages := []
     }
   }
 }
