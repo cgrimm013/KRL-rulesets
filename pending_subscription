@@ -13,7 +13,7 @@ ruleset pending_subscription {
     noop()
     always{
       raise wrangler event "pending_subscription_approval"
-        attributes event:attrs().klog("LOL")
+        attributes event:attrs()
     }
   }
 
