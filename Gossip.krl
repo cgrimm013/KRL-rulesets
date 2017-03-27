@@ -15,11 +15,12 @@ ruleset Gossip {
                           "message": event:attr("message"),
                           "originatorID": event:attr("originatorID")
                         }
-      rumor_message = {"Rumor": partial_message, "Endpoint":"Some URL"}
+      rumor_message = {"Rumor": partial_message, "Endpoint":"Some URL"}.klog("rumor_message: ")
       //check for already existing message id
     }
+    noop()
     fired{
-      ent:messages.defaultsTo([]).union([rumor_message])
+      ent:messages := ent:messages.defaultsTo([{}]).union([rumor_message])
     }
   }
 
