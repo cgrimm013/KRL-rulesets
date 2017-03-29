@@ -64,14 +64,27 @@ ruleset Gossip {
       keys = subscriptions.keys()
       subscriptions_not_empty = keys.length() > 0 
     }
-    if subscriptions_not_empty then{ 
-      //raise events to every subscribed pico
+    if subscriptions_not_empty then 
       noop()
-    }
-    else{
-      noop()
-    }
     fired{
+      //send want events to every subscribed pico
+      raise explicit event "wants"  
+        attributes subscriptions
+    }
+  }
+
+  rule wants{
+    select when explicit wants
+    foreach event:attrs() setting(value,name)
+    pre{
+      b = value.klog("value: ")
+      c = name.klog("name: ")
+      eci_to_poke = value{["attributes","outbound_eci"]}.klog("eci: ")
+      //package all the want info you need to send
+    }
+    noop()
+    always{
+      
     }
   }
 }
