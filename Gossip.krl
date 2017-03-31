@@ -24,14 +24,19 @@ ruleset Gossip {
                         }
       endpoint = event:attr("endpoint")
       rumor_message = {"Rumor": partial_message, "Endpoint":endpoint}.klog("rumor_message: ")
-      originatorID = event:attr("messageID").split(re#:#)[0]
+      messageID_array = event:attr("messageID").split(re#:#)
+      originatorID = messageID_array[0].as("String")
+      sequenceValue = messageID_array[1].as("Number")
+      newArray = ent:messageIDs{[originatorID]}.defaultsTo([]).union([sequenceValue]).klog("newArray: ")
       //error check: do not add a new message that has the same messageID?
     }
     noop()
     fired{
       ent:endpoints := ent:endpoints.defaultsTo([]).union([endpoint]);
       ent:originators := ent:originators.defaultsTo([]).union([originatorID]);
-      ent:messages := ent:messages.defaultsTo([{}]).union([rumor_message])
+      ent:messages := ent:messages.defaultsTo([{}]).union([rumor_message]);
+      ent:messageIDs := ent:messageIDs.defaultsTo({});//in case messageIDs does not yet exist
+      ent:messageIDs{[originatorID]} := newArray
     }
   }
 
@@ -41,7 +46,8 @@ ruleset Gossip {
     always{
       ent:originators:= [];
       ent:messages := [];
-      ent:endpoints := []
+      ent:endpoints := [];
+      ent:messageIDs := {}
     }
   }
 
@@ -86,11 +92,17 @@ ruleset Gossip {
     pre{
       b = value.klog("value: ")
       c = name.klog("name: ")
+      //obtain the sending address eci
       eci_to_poke = value{["attributes","outbound_eci"]}.klog("eci: ")
-      //package all the want info you need to send
       
     }
-    noop()
+    event:send( { "eci": eci_to_poke, 
+                    "eid": "anything",
+                    "domain": "want", 
+                    "type": "message",
+                    "attrs": { "rid": "app_section", 
+                               "section_id": section_id } 
+                  } )
     always{
       
     }
