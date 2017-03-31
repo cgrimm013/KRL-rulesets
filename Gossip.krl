@@ -56,6 +56,10 @@ ruleset Gossip {
 
   rule onWant{
     select when want message
+    pre{
+      temp2 = meta:eci.klog("Pico's eci: ")
+      temp = event:attrs().klog("want_message")
+    }
     noop()
   }
 
@@ -94,17 +98,16 @@ ruleset Gossip {
       c = name.klog("name: ")
       //obtain the sending address eci
       eci_to_poke = value{["attributes","outbound_eci"]}.klog("eci: ")
-      
+      want_message = {"want": ent:messageIDs}
     }
     event:send( { "eci": eci_to_poke, 
                     "eid": "anything",
                     "domain": "want", 
                     "type": "message",
-                    "attrs": { "rid": "app_section", 
-                               "section_id": section_id } 
+                    "attrs": want_message 
                   } )
     always{
-      
+      //do nothing for now
     }
   }
 }
