@@ -69,13 +69,34 @@ ruleset Gossip {
     }
   }
 
+  /*
+    The following two rules will break the infinite loop. The final foreach in each
+    ruleset will be empty when one pico contains all the messages the other pico contains,
+    thus not sending anymore want messages
+  */
   rule rumor_need{
     select when rumor need
-      foreach event:attr("want") setting(value,name)
+      foreach event:attr("want") setting(value,originator)
+        foreach ent:messageIDs.defaultsTo([]).difference(value) setting(sequence_number)
+    pre{
+      a = ent:messageIDs.defaultsTo([]).difference(value).klog("loop2: ")
+    }
+    noop()
+    always{
+      //send the information to the desired pico
+      raise rumor event "package"
+        attributes { "endpoint": event:attr("endpoint"),
+                     "messageID": originator + sequence_number.as("String")
+                   }
+    }
   }
 
   rule rumor_missing{
     select when rumor missing
+      foreach event:attr("want") setting(value,name)
+        foreach value.difference(ent:messageIDs.defaultsTo([])) setting(sequence_number)
+    pre{
+    }
   }
 
   rule onRumor{
@@ -85,6 +106,10 @@ ruleset Gossip {
 
   rule rumor_package{
     select when rumor package
+    pre{
+      a = event:attr("endpoint").klog("rumor_package_endpt: ")
+      b = event:attr("messageID").klog("rumor_package_id: ")
+    }
     noop()
   }
 
@@ -115,7 +140,6 @@ ruleset Gossip {
       eci_to_poke = value{["attributes","outbound_eci"]}.klog("eci: ")
       not_empty = ent:messageIDs.defaultsTo({}).keys().length() > 0
       d = not_empty.klog("not_empty:" )
-      want_message = {"want": ent:messageIDs}
     }
     if not_empty then
     event:send( { "eci": eci_to_poke, 
