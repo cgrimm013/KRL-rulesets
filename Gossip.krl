@@ -61,6 +61,21 @@ ruleset Gossip {
       temp = event:attrs().klog("want_message")
     }
     noop()
+    always{
+      raise rumor event "need"
+        attributes event:attrs();
+      raise rumor event "missing"
+        attributes event:attrs()
+    }
+  }
+
+  rule rumor_need{
+    select when rumor need
+      foreach event:attr("want") setting(value,name)
+  }
+
+  rule rumor_missing{
+    select when rumor missing
   }
 
   rule onRumor{
@@ -98,15 +113,20 @@ ruleset Gossip {
       c = name.klog("name: ")
       //obtain the sending address eci
       eci_to_poke = value{["attributes","outbound_eci"]}.klog("eci: ")
+      not_empty = ent:messageIDs.defaultsTo({}).keys().length() > 0
+      d = not_empty.klog("not_empty:" )
       want_message = {"want": ent:messageIDs}
     }
+    if not_empty then
     event:send( { "eci": eci_to_poke, 
                     "eid": "anything",
                     "domain": "want", 
                     "type": "message",
-                    "attrs": want_message 
+                    "attrs": {"want": ent:messageIDs,
+                              "endpoint": meta:eci
+                             } 
                   } )
-    always{
+    fired{
       //do nothing for now
     }
   }
