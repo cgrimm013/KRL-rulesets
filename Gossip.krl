@@ -76,8 +76,8 @@ ruleset Gossip {
   */
   rule rumor_need{
     select when rumor need
-      foreach event:attr("want") setting(value,originator)
-        foreach ent:messageIDs.defaultsTo([]).difference(value) setting(sequence_number)
+      foreach event:attr("want").klog("attr: ") setting(value,originator)
+        foreach ent:messageIDs{[originator]}.defaultsTo([]).difference(value).klog("Value: ") setting(sequence_number)
     pre{
       a = ent:messageIDs.defaultsTo([]).difference(value).klog("loop2: ")
     }
