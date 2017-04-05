@@ -74,15 +74,18 @@ ruleset Gossip {
     ruleset will be empty when one pico contains all the messages the other pico contains,
     thus not sending anymore want messages
   */
+
+  //this rule follows the logic: "everthing I have, but you do not"
   rule rumor_need{
     select when rumor need
-      foreach event:attr("want").klog("attr: ") setting(value,originator)
-        foreach ent:messageIDs{[originator]}.defaultsTo([]).difference(value).klog("Value: ") setting(sequence_number)
+      foreach ent:messageIDs setting(value,originator)
+        foreach value.defaultsTo([]).difference(event:attr("want"){[originator]}.defaultsTo([])).klog("Value: ") setting(sequence_number)
     pre{
-      a = ent:messageIDs.defaultsTo([]).difference(value).klog("loop2: ")
+      needToSend = event:attr("want"){[originator]}[0] > sequence_number
     }
+    if needToSend then
     noop()
-    always{
+    fired{
       //send the information to the desired pico
       raise rumor event "package"
         attributes { "endpoint": event:attr("endpoint"),
@@ -91,10 +94,11 @@ ruleset Gossip {
     }
   }
 
+  //the logic: "if you have something I do not, i'll send you a want message"
   rule rumor_missing{
     select when rumor missing
-      foreach event:attr("want") setting(value,name)
-        foreach value.difference(ent:messageIDs.defaultsTo([])) setting(sequence_number)
+      foreach event:attr("want") setting(value,originator)
+        foreach value.difference(ent:messageIDs{[originator]}.defaultsTo([])) setting(sequence_number)
     pre{
     }
   }
