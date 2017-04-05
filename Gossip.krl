@@ -9,6 +9,24 @@ ruleset Gossip {
     get_messages = function(){
       ent:messages
     }
+    
+    get_filtered_map = function(){
+      ent:messageIDs.map(
+	function(v,k){
+		[v.filter(function(x){
+			not(v >< (x+1))
+			})[0]
+		]
+	}
+      )
+    }
+
+    create_package = function(messageID){
+      ent:messages.defaultsTo([]).filter(
+        function(v) {
+          v{["Rumor","messageID"]} == messageID
+        })[0]
+    }
   }
   
 
@@ -63,9 +81,9 @@ ruleset Gossip {
     noop()
     always{
       raise rumor event "need"
-        attributes event:attrs();
-      raise rumor event "missing"
         attributes event:attrs()
+//      raise rumor event "missing"
+//        attributes event:attrs()
     }
   }
 
@@ -81,7 +99,7 @@ ruleset Gossip {
       foreach ent:messageIDs setting(value,originator)
         foreach value.defaultsTo([]).difference(event:attr("want"){[originator]}.defaultsTo([])).klog("Value: ") setting(sequence_number)
     pre{
-      needToSend = event:attr("want"){[originator]}[0] > sequence_number
+      needToSend = event:attr("want"){[originator]}[0].defaultsTo(-1) < sequence_number
     }
     if needToSend then
     noop()
@@ -89,7 +107,7 @@ ruleset Gossip {
       //send the information to the desired pico
       raise rumor event "package"
         attributes { "endpoint": event:attr("endpoint"),
-                     "messageID": originator + sequence_number.as("String")
+                     "messageID": originator + ":" + sequence_number.as("String")
                    }
     }
   }
@@ -101,20 +119,47 @@ ruleset Gossip {
         foreach value.difference(ent:messageIDs{[originator]}.defaultsTo([])) setting(sequence_number)
     pre{
     }
+    event:send( { "eci": event:attr("endpoint"), 
+                    "eid": "anything",
+                    "domain": "want", 
+                    "type": "message",
+                    "attrs": {"want": get_filtered_map(),
+                              "endpoint": meta:eci
+                             } 
+                  } )
+    fired{
+      
+    }
   }
 
   rule onRumor{
     select when rumor message
+    pre{
+    }
     noop()
+    fired{
+    }
   }
 
   rule rumor_package{
     select when rumor package
     pre{
       a = event:attr("endpoint").klog("rumor_package_endpt: ")
-      b = event:attr("messageID").klog("rumor_package_id: ")
+      messageID = event:attr("messageID").klog("rumor_package_id: ")
+      map_to_send = create_package(messageID).klog("messageID: ")
     }
-    noop()
+    event:send( { "eci": event:attr("endpoint"), 
+                    "eid": "anything",
+                    "domain": "new", 
+                    "type": "message",
+                    "attrs": {"originator": map_to_send{["Rumor","originator"]},
+                              "message": map_to_send{["Rumor","message"]},
+                              "messageID": map_to_send{["Rumor","messageID"]},
+                              "endpoint": map_to_send{["Endpoint"]}
+                             }
+                  } )
+    fired{
+    }
   }
 
   rule want_poke{
@@ -144,13 +189,14 @@ ruleset Gossip {
       eci_to_poke = value{["attributes","outbound_eci"]}.klog("eci: ")
       not_empty = ent:messageIDs.defaultsTo({}).keys().length() > 0
       d = not_empty.klog("not_empty:" )
+      e = get_filtered_map().klog("filteredMap: ")
     }
     if not_empty then
     event:send( { "eci": eci_to_poke, 
                     "eid": "anything",
                     "domain": "want", 
                     "type": "message",
-                    "attrs": {"want": ent:messageIDs,
+                    "attrs": {"want": get_filtered_map(),
                               "endpoint": meta:eci
                              } 
                   } )
