@@ -12,12 +12,12 @@ ruleset Gossip {
     
     get_filtered_map = function(){
       ent:messageIDs.defaultsTo({}).map(
-	function(v,k){
-		[v.filter(function(x){
-			not(v >< (x+1))
-			})[0]
-		]
-	}
+  function(v,k){
+    [v.filter(function(x){
+      not(v >< (x+1))
+      })[0]
+    ]
+  }
       )
     }
 
@@ -54,7 +54,8 @@ ruleset Gossip {
       ent:originators := ent:originators.defaultsTo([]).union([originatorID]);
       ent:messages := ent:messages.defaultsTo([{}]).union([rumor_message]);
       ent:messageIDs := ent:messageIDs.defaultsTo({});//in case messageIDs does not yet exist
-      ent:messageIDs{[originatorID]} := newArray
+      ent:messageIDs{[originatorID]} := newArray;
+      raise want event "poke"
     }
   }
 
@@ -150,8 +151,8 @@ ruleset Gossip {
     }
     event:send( { "eci": event:attr("endpoint"), 
                     "eid": "anything",
-                    "domain": "new", 
-                    "type": "message",
+                    "domain": "message", 
+                    "type": "new",
                     "attrs": {"originator": map_to_send{["Rumor","originator"]},
                               "message": map_to_send{["Rumor","message"]},
                               "messageID": map_to_send{["Rumor","messageID"]},
