@@ -11,7 +11,7 @@ ruleset Gossip {
     }
     
     get_filtered_map = function(){
-      ent:messageIDs.map(
+      ent:messageIDs.defaultsTo({}).map(
 	function(v,k){
 		[v.filter(function(x){
 			not(v >< (x+1))
@@ -81,9 +81,9 @@ ruleset Gossip {
     noop()
     always{
       raise rumor event "need"
+        attributes event:attrs();
+      raise rumor event "missing"
         attributes event:attrs()
-//      raise rumor event "missing"
-//        attributes event:attrs()
     }
   }
 
