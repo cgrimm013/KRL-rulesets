@@ -1,8 +1,7 @@
 {
       "meta" : {
                 "discription": "Wrangler base prototype"
-                },
-                //array of maps for meta data of rids .. [{rid : id},..}  
+                }, 
       "rids": [ 
                 "wrangler", "io.picolabs.visual_params", "prototypes", "io.picolabs.wrangler.PDS", "io.picolabs.wrangler.common"
               ],
@@ -14,7 +13,7 @@
                                           "attr2":"2"
                                         }
                             }
-                            ], // array of maps
+                            ],
       "PDS" : {
                 "profile" : {
                             "name":"base",
